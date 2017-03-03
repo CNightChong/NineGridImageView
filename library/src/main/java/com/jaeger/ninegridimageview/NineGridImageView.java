@@ -7,12 +7,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Jaeger on 16/2/24.
- *
+ * <p>
  * Email: chjie.jaeger@gamil.com
  * GitHub: https://github.com/laobie
  */
@@ -30,8 +31,8 @@ public class NineGridImageView<T> extends ViewGroup {
     private int mSingleImgSize; // 单张图片时的尺寸
     private int mGridSize;   // 宫格大小,即图片大小
 
-    private List<ImageView> mImageViewList = new ArrayList<>();
-    private List<T> mImgDataList;
+    private List<ImageView> mImageViews = new ArrayList<>();
+    private List<T> mImages;
 
     private NineGridImageViewAdapter<T> mAdapter;
     private ItemImageClickListener<T> mItemImageClickListener;
@@ -56,11 +57,12 @@ public class NineGridImageView<T> extends ViewGroup {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height;
         int totalWidth = width - getPaddingLeft() - getPaddingRight();
-        if (mImgDataList != null && mImgDataList.size() > 0) {
-            if (mImgDataList.size() == 1 && mSingleImgSize != -1) {
+        if (mImages != null && mImages.size() > 0) {
+            if (mImages.size() == 1 && mSingleImgSize != -1) {
                 mGridSize = mSingleImgSize > totalWidth ? totalWidth : mSingleImgSize;
             } else {
-                mImageViewList.get(0).setScaleType(ImageView.ScaleType.CENTER_CROP);
+                mImageViews.get(0).setScaleType(ImageView.ScaleType.CENTER_CROP);
+                // 一格图片的大小
                 mGridSize = (totalWidth - mGap * (mColumnCount - 1)) / mColumnCount;
             }
             height = mGridSize * mRowCount + mGap * (mRowCount - 1) + getPaddingTop() + getPaddingBottom();
@@ -80,16 +82,19 @@ public class NineGridImageView<T> extends ViewGroup {
      * 布局 ImageView
      */
     private void layoutChildrenView() {
-        if (mImgDataList == null) {
+        if (mImages == null) {
             return;
         }
-        int showCount = getNeedShowCount(mImgDataList.size());
+        int showCount = getNeedShowCount(mImages.size());
         for (int i = 0; i < showCount; i++) {
             ImageView childrenView = (ImageView) getChildAt(i);
             if (mAdapter != null) {
-                mAdapter.onDisplayImage(getContext(), childrenView, mImgDataList.get(i));
+                // 展示图片
+                mAdapter.onDisplayImage(getContext(), childrenView, mImages.get(i));
             }
+            // 当前行数，从0计数
             int rowNum = i / mColumnCount;
+            // 当前列数，从0计数
             int columnNum = i % mColumnCount;
             int left = (mGridSize + mGap) * columnNum + getPaddingLeft();
             int top = (mGridSize + mGap) * rowNum + getPaddingTop();
@@ -105,7 +110,7 @@ public class NineGridImageView<T> extends ViewGroup {
      *
      * @param lists 图片数据集合
      */
-    public void setImagesData(List lists) {
+    public void setImagesData(List<T> lists) {
         if (lists == null || lists.isEmpty()) {
             this.setVisibility(GONE);
             return;
@@ -115,10 +120,14 @@ public class NineGridImageView<T> extends ViewGroup {
 
         int newShowCount = getNeedShowCount(lists.size());
 
+        // 宫格参数
         int[] gridParam = calculateGridParam(newShowCount, mShowStyle);
+        // 行数
         mRowCount = gridParam[0];
+        // 列数
         mColumnCount = gridParam[1];
-        if (mImgDataList == null) {
+        // 第一次设置图片数据
+        if (mImages == null) {
             int i = 0;
             while (i < newShowCount) {
                 ImageView iv = getImageView(i);
@@ -129,7 +138,8 @@ public class NineGridImageView<T> extends ViewGroup {
                 i++;
             }
         } else {
-            int oldShowCount = getNeedShowCount(mImgDataList.size());
+            // 复用
+            int oldShowCount = getNeedShowCount(mImages.size());
             if (oldShowCount > newShowCount) {
                 removeViews(newShowCount, oldShowCount - newShowCount);
             } else if (oldShowCount < newShowCount) {
@@ -142,10 +152,16 @@ public class NineGridImageView<T> extends ViewGroup {
                 }
             }
         }
-        mImgDataList = lists;
+        mImages = lists;
         requestLayout();
     }
 
+    /**
+     * 需要展示的图片数量
+     *
+     * @param size 数量
+     * @return 真正展示的数量
+     */
     private int getNeedShowCount(int size) {
         if (mMaxSize > 0 && size > mMaxSize) {
             return mMaxSize;
@@ -161,18 +177,18 @@ public class NineGridImageView<T> extends ViewGroup {
      * @param position 位置
      */
     private ImageView getImageView(final int position) {
-        if (position < mImageViewList.size()) {
-            return mImageViewList.get(position);
+        if (position < mImageViews.size()) {
+            return mImageViews.get(position);
         } else {
             if (mAdapter != null) {
                 ImageView imageView = mAdapter.generateImageView(getContext());
-                mImageViewList.add(imageView);
+                mImageViews.add(imageView);
                 imageView.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mAdapter.onItemImageClick(getContext(), (ImageView) v, position, mImgDataList);
+                        mAdapter.onItemImageClick(getContext(), (ImageView) v, position, mImages);
                         if (mItemImageClickListener != null) {
-                            mItemImageClickListener.onItemImageClick(getContext(), (ImageView) v, position, mImgDataList);
+                            mItemImageClickListener.onItemImageClick(getContext(), (ImageView) v, position, mImages);
                         }
                     }
                 });
@@ -202,6 +218,7 @@ public class NineGridImageView<T> extends ViewGroup {
                     gridParam[0] = 2;
                     gridParam[1] = 2;
                 } else {
+                    // 9宫格
                     gridParam[0] = imagesSize / 3 + (imagesSize % 3 == 0 ? 0 : 1);
                     gridParam[1] = 3;
                 }
@@ -219,7 +236,7 @@ public class NineGridImageView<T> extends ViewGroup {
      *
      * @param adapter 适配器
      */
-    public void setAdapter(NineGridImageViewAdapter adapter) {
+    public void setAdapter(NineGridImageViewAdapter<T> adapter) {
         mAdapter = adapter;
     }
 
