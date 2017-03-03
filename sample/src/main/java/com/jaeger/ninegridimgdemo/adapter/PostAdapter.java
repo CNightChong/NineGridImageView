@@ -9,17 +9,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.jaeger.ninegridimageview.ItemImageClickListener;
 import com.jaeger.ninegridimageview.NineGridImageView;
 import com.jaeger.ninegridimageview.NineGridImageViewAdapter;
 import com.jaeger.ninegridimgdemo.R;
 import com.jaeger.ninegridimgdemo.entity.Post;
 import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 /**
  * Created by Jaeger on 16/2/24.
- *
+ * <p>
  * Email: chjie.jaeger@gmail.com
  * GitHub: https://github.com/laobie
  */
@@ -83,7 +85,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             mNglContent.setItemImageClickListener(new ItemImageClickListener<String>() {
                 @Override
                 public void onItemImageClick(Context context, ImageView imageView, int index, List<String> list) {
-                    Log.d("onItemImageClick", list.get(index));
+                    Log.e("onItemImageClick", list.get(index));
                 }
             });
         }
@@ -92,8 +94,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             mNglContent.setImagesData(post.getImgUrlList());
             mTvContent.setText(post.getContent());
 
-            Log.d("jaeger", "九宫格高度: " + mNglContent.getMeasuredHeight());
-            Log.d("jaeger", "item 高度: " + itemView.getMeasuredHeight());
+            Log.e("jaeger", "九宫格高度: " + mNglContent.getMeasuredHeight());
+            Log.e("jaeger", "item 高度: " + itemView.getMeasuredHeight());
         }
     }
 }
